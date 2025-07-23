@@ -3,6 +3,7 @@ import axios from "axios";
 
 export default function App() {
   const [query, setQuery] = useState("");
+  const [file, setFile] = useState(null);
   const [location, setLocation] = useState("Remote");
   const [salary, setSalary] = useState(90000);
   const [jobs, setJobs] = useState([]);
@@ -11,14 +12,19 @@ export default function App() {
 
   const fetchMatches = async () => {
     try {
-      const res = await axios.post("http://localhost:8000/match", {
-        query,
-        top_k: 50, // fetch all results, paginate client-side
-        filter: {
-          location,
-          salary: { "$gte": salary }
-        }
+      const formData = new FormData();
+      if (file) {
+        formData.append("resume", file);
+      } else {
+        formData.append("query", query);
+      }
+      formData.append("location", location);
+      formData.append("salary", salary);
+
+      const res = await axios.post("http://localhost:8000/upload-match", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
+
       setJobs(res.data);
       setPage(1);
     } catch (err) {
@@ -43,6 +49,14 @@ export default function App() {
           placeholder="Paste your resume or describe your experience..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          disabled={file !== null}
+        />
+
+        <input
+          type="file"
+          accept=".pdf,.docx"
+          onChange={(e) => setFile(e.target.files[0])}
+          className="w-full border rounded p-2"
         />
 
         <div className="flex flex-col sm:flex-row gap-4">

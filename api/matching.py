@@ -1,29 +1,40 @@
 import os
+import io
+import pdfplumber
+import docx
 from dotenv import load_dotenv
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, File, Form, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from pinecone import Pinecone
 from openai import OpenAI
 
-# Load env vars
+# Load environment variables
 load_dotenv()
 
-# Setup OpenAI & Pinecone
+# Initialize OpenAI & Pinecone
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 index = pc.Index(os.getenv("PINECONE_INDEX_NAME"))
 
-# FastAPI app
+# Initialize FastAPI app
 app = FastAPI()
 
-# Request schema
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Pydantic models for JSON API
 class MatchRequest(BaseModel):
     query: str
     top_k: int = 5
     filter: dict = {}
 
-# Response schema
 class MatchResult(BaseModel):
     id: str
     score: float
@@ -31,21 +42,84 @@ class MatchResult(BaseModel):
     location: str
     salary: int
 
+# Helpers to extract text from files
+def extract_text_from_pdf(file_bytes: bytes) -> str:
+    with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+        return "\n".join([page.extract_text() or "" for page in pdf.pages])
+
+def extract_text_from_docx(file_bytes: bytes) -> str:
+    doc = docx.Document(io.BytesIO(file_bytes))
+    return "\n".join([para.text for para in doc.paragraphs])
+
+# Endpoint 1: Original JSON API (unchanged)
 @app.post("/match", response_model=List[MatchResult])
 def match_jobs(req: MatchRequest):
-    # Embed the query (e.g., resume text)
     response = openai_client.embeddings.create(
         input=req.query,
         model="text-embedding-3-small"
     )
     query_vector = response.data[0].embedding
 
-    # Query Pinecone index
     search_result = index.query(
         vector=query_vector,
         top_k=req.top_k,
         include_metadata=True,
         filter=req.filter if req.filter else None
+    )
+
+    results = []
+    for match in search_result.matches:
+        metadata = match.metadata
+        results.append(MatchResult(
+            id=match.id,
+            score=match.score,
+            title=metadata.get("title", ""),
+            location=metadata.get("location", ""),
+            salary=metadata.get("salary", 0)
+        ))
+
+    return results
+
+# Endpoint 2: File upload support (frontend form)
+@app.post("/upload-match", response_model=List[MatchResult])
+async def match_jobs_with_file(
+    resume: Optional[UploadFile] = File(None),
+    query: Optional[str] = Form(""),
+    location: str = Form(...),
+    salary: int = Form(...),
+):
+    # Extract query text
+    if resume:
+        file_bytes = await resume.read()
+        if resume.filename.lower().endswith(".pdf"):
+            query_text = extract_text_from_pdf(file_bytes)
+        elif resume.filename.lower().endswith(".docx"):
+            query_text = extract_text_from_docx(file_bytes)
+        else:
+            return {"error": "Unsupported file type"}
+    else:
+        query_text = query
+
+    if not query_text.strip():
+        return {"error": "Empty resume or query text."}
+
+    # Embed and search
+    response = openai_client.embeddings.create(
+        input=query_text,
+        model="text-embedding-3-small"
+    )
+    query_vector = response.data[0].embedding
+
+    filter_ = {
+        "location": location,
+        "salary": {"$gte": salary}
+    }
+
+    search_result = index.query(
+        vector=query_vector,
+        top_k=50,
+        include_metadata=True,
+        filter=filter_
     )
 
     results = []

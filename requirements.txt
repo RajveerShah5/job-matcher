@@ -4,3 +4,5 @@ python-dotenv
 tqdm
 fastapi
 uvicorn
+pdfplumber
+docx

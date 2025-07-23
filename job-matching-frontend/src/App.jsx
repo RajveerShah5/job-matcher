@@ -59,13 +59,28 @@ export default function App() {
         formData.append("resume", file);
         formData.append("location", location || "Remote");
         formData.append("salary", salary);
+        
+        // Add new filter parameters
+        if (locationType) formData.append("location_type", locationType);
+        if (employmentType) formData.append("employment_type", employmentType);
+        if (jobSector) formData.append("sector", jobSector);
 
         response = await fetch("http://localhost:8000/upload-match", {
           method: "POST",
           body: formData,
         });
       } else {
-        // Use text query endpoint
+        // Use text query endpoint with enhanced filters
+        const filterObj = {
+          location: location || "Remote",
+          salary: { "$gte": salary }
+        };
+        
+        // Add optional filters
+        if (locationType) filterObj.location_type = locationType;
+        if (employmentType) filterObj.employment_type = employmentType;
+        if (jobSector) filterObj.sector = jobSector;
+
         response = await fetch("http://localhost:8000/match", {
           method: "POST",
           headers: {
@@ -74,10 +89,7 @@ export default function App() {
           body: JSON.stringify({
             query,
             top_k: 50,
-            filter: {
-              location: location || "Remote",
-              salary: { "$gte": salary }
-            }
+            filter: filterObj
           }),
         });
       }

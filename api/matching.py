@@ -51,7 +51,7 @@ def extract_text_from_docx(file_bytes: bytes) -> str:
     doc = docx.Document(io.BytesIO(file_bytes))
     return "\n".join([para.text for para in doc.paragraphs])
 
-# Endpoint 1: Original JSON API (unchanged)
+# Endpoint 1: Original JSON API
 @app.post("/match", response_model=List[MatchResult])
 def match_jobs(req: MatchRequest):
     response = openai_client.embeddings.create(
@@ -80,13 +80,16 @@ def match_jobs(req: MatchRequest):
 
     return results
 
-# Endpoint 2: File upload support (frontend form)
+# Endpoint 2: File upload support with advanced filtering
 @app.post("/upload-match", response_model=List[MatchResult])
 async def match_jobs_with_file(
     resume: Optional[UploadFile] = File(None),
     query: Optional[str] = Form(""),
     location: str = Form(...),
     salary: int = Form(...),
+    location_type: Optional[str] = Form(None),
+    employment_type: Optional[str] = Form(None),
+    sector: Optional[str] = Form(None)
 ):
     # Extract query text
     if resume:
@@ -103,18 +106,27 @@ async def match_jobs_with_file(
     if not query_text.strip():
         return {"error": "Empty resume or query text."}
 
-    # Embed and search
+    # Embed query
     response = openai_client.embeddings.create(
         input=query_text,
         model="text-embedding-3-small"
     )
     query_vector = response.data[0].embedding
 
+    # Build filter
     filter_ = {
         "location": location,
         "salary": {"$gte": salary}
     }
 
+    if location_type:
+        filter_["location_type"] = location_type
+    if employment_type:
+        filter_["employment_type"] = employment_type
+    if sector:
+        filter_["sector"] = sector
+
+    # Query Pinecone
     search_result = index.query(
         vector=query_vector,
         top_k=50,

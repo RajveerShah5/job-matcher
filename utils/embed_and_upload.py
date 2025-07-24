@@ -100,7 +100,8 @@ def generate_fake_jobs(n=10000):
                 "us_state": state,
                 "location_type": location_type,
                 "employment_type": employment_type,
-                "sector": sector
+                "sector": sector,
+                "tags": [title.lower().split()[-1], sector.split()[0].lower()]
             }
         })
 

@@ -38,6 +38,7 @@ class MatchResult(BaseModel):
     salary: int
     us_state: Optional[str] = ""
     location_type: Optional[str] = ""
+    tags: Optional[List[str]] = []
 
 def extract_text_from_pdf(file_bytes: bytes) -> str:
     with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
@@ -58,6 +59,20 @@ def detect_resume_seniority(text: str) -> str:
     if any(term in lowered for term in ["student", "intern", "undergrad", "bachelor", "sophomore", "junior"]):
         return "junior"
     return "senior"
+
+def get_tags_from_title(title: str) -> List[str]:
+    title = title.lower()
+    tags_map = {
+        "software engineer": ["React", "Node.js", "JavaScript", "Python", "AWS"],
+        "data scientist": ["Python", "Machine Learning", "SQL", "TensorFlow", "Pandas"],
+        "product manager": ["Strategy", "Analytics", "Agile", "Roadmapping", "Stakeholder Management"],
+        "ux designer": ["Figma", "Design Systems", "User Research", "Prototyping", "Wireframing"],
+        "devops engineer": ["Docker", "Kubernetes", "AWS", "CI/CD", "Infrastructure"]
+    }
+    for key, tags in tags_map.items():
+        if key in title:
+            return tags[:3]
+    return ["Technology", "Innovation", "Growth"]
 
 @app.post("/match", response_model=List[MatchResult])
 def match_jobs(req: MatchRequest):
@@ -82,7 +97,8 @@ def match_jobs(req: MatchRequest):
             location=match.metadata.get("location", ""),
             salary=match.metadata.get("salary", 0),
             us_state=match.metadata.get("us_state", ""),
-            location_type=match.metadata.get("location_type", "")
+            location_type=match.metadata.get("location_type", ""),
+            tags=match.metadata.get("tags", get_tags_from_title(match.metadata.get("title", "")))
         )
         for match in search_result.matches
     ]
@@ -130,8 +146,8 @@ async def match_jobs_with_file(
     query_vector = response.data[0].embedding
 
     filter_ = {
-    "salary": {"$gte": salary}
-}
+        "salary": {"$gte": salary}
+    }
 
     if location and location.strip():
         filter_["location"] = {"$eq": location.title()}
@@ -143,7 +159,6 @@ async def match_jobs_with_file(
         filter_["sector"] = {"$eq": sector}
     if us_state and us_state.strip():
         filter_["us_state"] = {"$eq": us_state.title()}
-
 
     search_result = index.query(
         vector=query_vector,
@@ -177,7 +192,8 @@ async def match_jobs_with_file(
             location=metadata.get("location", ""),
             salary=metadata.get("salary", 0),
             us_state=metadata.get("us_state", ""),
-            location_type=metadata.get("location_type", "")
+            location_type=metadata.get("location_type", ""),
+            tags=metadata.get("tags", get_tags_from_title(metadata.get("title", "")))
         )))
 
     results.sort(key=lambda x: x[0], reverse=True)

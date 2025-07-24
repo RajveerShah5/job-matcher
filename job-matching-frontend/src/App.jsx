@@ -141,18 +141,6 @@ export default function App() {
     return { color: '#6b7280', backgroundColor: '#f9fafb' };
   };
 
-  const getScoreStars = (score) => {
-    const stars = Math.round(score * 5);
-    return Array.from({ length: 5 }, (_, i) => (
-      <span
-        key={i}
-        style={{ color: i < stars ? '#fbbf24' : '#d1d5db' }}
-      >
-        ⭐
-      </span>
-    ));
-  };
-
   const styles = {
     container: {
       minHeight: '100vh',
@@ -754,26 +742,40 @@ export default function App() {
                       <h3 style={styles.jobTitle}>{job.title}</h3>
                       <p style={styles.jobCompany}>{job.company}</p>
                       <div style={styles.jobDetails}>
+                        {/* 📍 Location */}
                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                           <span>📍</span>
                           {job.location}
                         </span>
+
+                        {/* 💰 Salary */}
                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                           <span>💰</span>
                           ${job.salary.toLocaleString()}
                         </span>
-                        {job.us_state && (
-                          <span style={styles.badge}>
-                            {job.us_state}
-                          </span>
-                        )}
+
+                        {/* Location type */}
                         {job.location_type && (
-                          <span style={styles.locationTypeBadge}>
+                          <span style={styles.badge}>
                             {job.location_type}
                           </span>
                         )}
 
+                        {/* Employment type */}
+                        {job.employment_type && (
+                          <span style={styles.badge}>
+                            {job.employment_type}
+                          </span>
+                        )}
+
+                        {/* Job sector */}
+                        {job.sector && (
+                          <span style={styles.badge}>
+                            {job.sector}
+                          </span>
+                        )}
                       </div>
+                      
                       {job.tags && (
                         <div style={styles.tags}>
                           {job.tags.map((tag, index) => (
@@ -790,15 +792,6 @@ export default function App() {
                         ...getScoreColor(job.score)
                       }}>
                         {Math.round(job.score * 100)}% Match
-                      </div>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.125rem',
-                        marginTop: '0.5rem',
-                        justifyContent: 'flex-end'
-                      }}>
-                        {getScoreStars(job.score)}
                       </div>
                     </div>
                   </div>

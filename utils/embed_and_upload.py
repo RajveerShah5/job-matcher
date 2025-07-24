@@ -4,6 +4,7 @@ from time import sleep
 from dotenv import load_dotenv
 from pinecone import Pinecone, ServerlessSpec
 from openai import OpenAI
+from api.matching import get_tags_from_title
 
 
 # Load environment variables
@@ -61,14 +62,7 @@ def generate_fake_jobs(n=10000):
     location_types = ["Remote", "In-person", "Hybrid"]
 
     employment_types = [
-        "Full-time", "Part-time", "Self-employed", "Freelance", "Contract", "Internship", "Apprenticeship"
-    ]
-
-    sectors = [
-        "Computer Software", "Information Technology & Services", "Government Relations", "Financial Services",
-        "Defense & Space", "Hospital & Health Care", "Staffing & Recruiting", "Management Consulting",
-        "Computer & Network Security", "Marketing & Advertising", "Education", "Real Estate", "Automotive",
-        "Manufacturing", "Retail", "Entertainment"
+    "Full-time", "Part-time", "Internship"
     ]
 
     salaries = list(range(30000, 200001, 5000))  # $30k to $200k in $5k increments
@@ -81,13 +75,12 @@ def generate_fake_jobs(n=10000):
         state = random.choice(us_states)
         location_type = random.choice(location_types)
         employment_type = random.choice(employment_types)
-        sector = random.choice(sectors)
         salary = random.choice(salaries)
         location = state if location_type != "Remote" else "Remote"
 
         description = (
-            f"{full_title} opening in {location}. This is a {location_type} {employment_type} role "
-            f"in the {sector} sector. Expected salary: ${salary}."
+            f"{full_title} opening in {location}. This is a {location_type} {employment_type} role. "
+            f"Expected salary: ${salary}."
         )
 
         jobs.append({
@@ -100,8 +93,7 @@ def generate_fake_jobs(n=10000):
                 "us_state": state,
                 "location_type": location_type,
                 "employment_type": employment_type,
-                "sector": sector,
-                "tags": [title.lower().split()[-1], sector.split()[0].lower()]
+                "tags": get_tags_from_title(full_title)
             }
         })
 
@@ -139,7 +131,7 @@ def embed_jobs(jobs, batch_size=100):
 
 if __name__ == "__main__":
     print("Generating jobs...")
-    jobs = generate_fake_jobs(10000)
+    jobs = generate_fake_jobs(100)
     print(f"Number of jobs generated: {len(jobs)}")
     print("Embedding and uploading...")
     embed_jobs(jobs)

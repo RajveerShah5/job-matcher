@@ -6,7 +6,7 @@ export default function App() {
   const [location, setLocation] = useState("");
   const [locationType, setLocationType] = useState("");
   const [employmentType, setEmploymentType] = useState("");
-  const [jobSector, setJobSector] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
   const [salary, setSalary] = useState(90000);
   const [jobs, setJobs] = useState([]);
   const [page, setPage] = useState(1);
@@ -26,26 +26,16 @@ export default function App() {
   const locationTypes = ["In-person", "Remote", "Hybrid"];
 
   const employmentTypes = [
-    "Full-time", "Part-time", "Self-employed", "Freelance", "Contract", "Internship", "Apprenticeship"
+    "Full-time",
+    "Part-time",
+    "Internship"
   ];
 
-  const jobSectors = [
-    "Computer Software",
-    "Information Technology & Services",
-    "Government Relations",
-    "Financial Services",
-    "Defense & Space",
-    "Hospital & Health Care",
-    "Staffing & Recruiting",
-    "Management Consulting",
-    "Computer & Network Security",
-    "Marketing & Advertising",
-    "Education",
-    "Real Estate",
-    "Automotive",
-    "Manufacturing",
-    "Retail",
-    "Entertainment"
+  const jobTitles = [
+    "Software Engineer", "Data Scientist", "Product Manager", "UX Designer", "DevOps Engineer",
+    "Frontend Developer", "Backend Developer", "AI Researcher", "Cloud Architect", "Cybersecurity Analyst",
+    "Marketing Manager", "Sales Executive", "Operations Analyst", "Graphic Designer", "Financial Analyst",
+    "HR Specialist", "Technical Writer", "Support Engineer", "Recruiter", "Business Analyst"
   ];
 
   const resultsPerPage = 10;
@@ -63,7 +53,7 @@ export default function App() {
 
         if (locationType) formData.append("location_type", locationType);
         if (employmentType) formData.append("employment_type", employmentType);
-        if (jobSector) formData.append("sector", jobSector);
+        if (jobTitle) formData.append("title", jobTitle);
         if (usState) formData.append("us_state", usState);
 
         response = await fetch("http://localhost:8000/upload-match", {
@@ -78,7 +68,7 @@ export default function App() {
 
         if (locationType) filterObj.location_type = locationType;
         if (employmentType) filterObj.employment_type = employmentType;
-        if (jobSector) filterObj.sector = jobSector;
+        if (jobTitle) filterObj.title = jobTitle;
         if (usState) filterObj.us_state = usState;
 
         response = await fetch("http://localhost:8000/match", {
@@ -633,17 +623,17 @@ export default function App() {
             <div style={styles.inputGroup}>
               <label style={styles.label}>
                 <span style={{ marginRight: '0.25rem' }}>🏭</span>
-                Job Sector
+                Job Title
               </label>
               <select
                 style={styles.select}
                 className="focus-select"
-                value={jobSector}
-                onChange={(e) => setJobSector(e.target.value)}
+                value={jobTitle}
+                onChange={(e) => setJobTitle(e.target.value)}
               >
-                <option value="">Any Sector</option>
-                {jobSectors.map((sector) => (
-                  <option key={sector} value={sector}>{sector}</option>
+                <option value="">Any Title</option>
+                {jobTitles.map((title) => (
+                  <option key={title} value={title}>{title}</option>
                 ))}
               </select>
             </div>
@@ -740,7 +730,6 @@ export default function App() {
                   <div style={styles.jobHeader}>
                     <div style={{ flex: 1 }}>
                       <h3 style={styles.jobTitle}>{job.title}</h3>
-                      <p style={styles.jobCompany}>{job.company}</p>
                       <div style={styles.jobDetails}>
                         {/* 📍 Location */}
                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -765,13 +754,6 @@ export default function App() {
                         {job.employment_type && (
                           <span style={styles.badge}>
                             {job.employment_type}
-                          </span>
-                        )}
-
-                        {/* Job sector */}
-                        {job.sector && (
-                          <span style={styles.badge}>
-                            {job.sector}
                           </span>
                         )}
                       </div>

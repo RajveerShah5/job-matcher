@@ -41,7 +41,6 @@ class MatchResult(BaseModel):
     us_state: Optional[str] = ""
     location_type: Optional[str] = ""
     employment_type: Optional[str] = ""
-    sector: Optional[str] = ""
     tags: Optional[List[str]] = []
 
 
@@ -113,7 +112,6 @@ def match_jobs(req: MatchRequest) -> List[MatchResult]:
             us_state=match.metadata.get("us_state", ""),
             location_type=match.metadata.get("location_type", ""),
             employment_type=match.metadata.get("employment_type", ""),
-            sector=match.metadata.get("sector", ""),
             tags=match.metadata.get(
                 "tags",
                 get_tags_from_title(match.metadata.get("title", ""))
@@ -131,7 +129,7 @@ async def match_jobs_with_file(
     salary: int = Form(...),
     location_type: Optional[str] = Form(None),
     employment_type: Optional[str] = Form(None),
-    sector: Optional[str] = Form(None),
+    title: Optional[str] = Form(None),
     us_state: Optional[str] = Form(None)
 ) -> List[MatchResult]:
     # Read resume or fallback to query text
@@ -180,8 +178,8 @@ async def match_jobs_with_file(
         filter_["location_type"] = {"$eq": location_type}
     if employment_type:
         filter_["employment_type"] = {"$eq": employment_type}
-    if sector:
-        filter_["sector"] = {"$eq": sector}
+    if title:
+        filter_["title"] = {"$eq": title}
     if us_state:
         filter_["us_state"] = {"$eq": us_state.title()}
 
@@ -223,7 +221,6 @@ async def match_jobs_with_file(
                 us_state=metadata.get("us_state", ""),
                 location_type=metadata.get("location_type", ""),
                 employment_type=metadata.get("employment_type", ""),
-                sector=metadata.get("sector", ""),
                 tags=metadata.get(
                     "tags",
                     get_tags_from_title(metadata.get("title", ""))

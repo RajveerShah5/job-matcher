@@ -36,6 +36,8 @@ class MatchResult(BaseModel):
     title: str
     location: str
     salary: int
+    us_state: Optional[str] = ""
+    location_type: Optional[str] = ""
 
 def extract_text_from_pdf(file_bytes: bytes) -> str:
     with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
@@ -52,9 +54,6 @@ def normalize_filter(f):
     return fixed
 
 def detect_resume_seniority(text: str) -> str:
-    """
-    Very simple rule-based classifier: returns 'junior' if student, intern, or undergrad found.
-    """
     lowered = text.lower()
     if any(term in lowered for term in ["student", "intern", "undergrad", "bachelor", "sophomore", "junior"]):
         return "junior"
@@ -81,7 +80,9 @@ def match_jobs(req: MatchRequest):
             score=match.score,
             title=match.metadata.get("title", ""),
             location=match.metadata.get("location", ""),
-            salary=match.metadata.get("salary", 0)
+            salary=match.metadata.get("salary", 0),
+            us_state=match.metadata.get("us_state", ""),
+            location_type=match.metadata.get("location_type", "")
         )
         for match in search_result.matches
     ]
@@ -111,10 +112,8 @@ async def match_jobs_with_file(
     if not query_text.strip():
         return {"error": "Empty resume or query text."}
 
-    # Detect seniority
     resume_seniority = detect_resume_seniority(query_text)
 
-    # Enrich query
     enrichment = openai_client.chat.completions.create(
         model="gpt-4",
         messages=[
@@ -131,17 +130,20 @@ async def match_jobs_with_file(
     query_vector = response.data[0].embedding
 
     filter_ = {
-        "location": {"$eq": location.title()},
-        "salary": {"$gte": salary}
-    }
-    if location_type:
+    "salary": {"$gte": salary}
+}
+
+    if location and location.strip():
+        filter_["location"] = {"$eq": location.title()}
+    if location_type and location_type.strip():
         filter_["location_type"] = {"$eq": location_type}
-    if employment_type:
+    if employment_type and employment_type.strip():
         filter_["employment_type"] = {"$eq": employment_type}
-    if sector:
+    if sector and sector.strip():
         filter_["sector"] = {"$eq": sector}
-    if us_state:
+    if us_state and us_state.strip():
         filter_["us_state"] = {"$eq": us_state.title()}
+
 
     search_result = index.query(
         vector=query_vector,
@@ -161,7 +163,6 @@ async def match_jobs_with_file(
         metadata = match.metadata
         title = metadata.get("title", "").lower()
 
-        # Boost or penalize based on seniority mismatch
         if resume_seniority == "junior" and any(k in title for k in senior_keywords):
             adjusted_score = match.score - 0.2
         elif resume_seniority == "junior" and any(k in title for k in junior_keywords):
@@ -174,8 +175,10 @@ async def match_jobs_with_file(
             score=adjusted_score,
             title=metadata.get("title", ""),
             location=metadata.get("location", ""),
-            salary=metadata.get("salary", 0)
+            salary=metadata.get("salary", 0),
+            us_state=metadata.get("us_state", ""),
+            location_type=metadata.get("location_type", "")
         )))
 
     results.sort(key=lambda x: x[0], reverse=True)
-    return [r for _, r in results[:25]]
+    return [r for _, r in results[:100]]

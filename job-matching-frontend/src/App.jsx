@@ -14,24 +14,24 @@ export default function App() {
   const [usState, setUsState] = useState("");
 
   const usStates = [
-    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", 
-    "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", 
-    "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", 
-    "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", 
-    "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", 
-    "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", 
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
+    "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
+    "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
+    "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico",
+    "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
+    "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
     "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
   ];
 
   const locationTypes = ["In-person", "Remote", "Hybrid"];
-  
+
   const employmentTypes = [
     "Full-time", "Part-time", "Self-employed", "Freelance", "Contract", "Internship", "Apprenticeship"
   ];
 
   const jobSectors = [
     "Computer Software",
-    "Information Technology & Services", 
+    "Information Technology & Services",
     "Government Relations",
     "Financial Services",
     "Defense & Space",
@@ -48,86 +48,70 @@ export default function App() {
     "Entertainment"
   ];
 
-  const resultsPerPage = 5;
+  const resultsPerPage = 10;
 
   const fetchMatches = async () => {
-  setLoading(true);
-  try {
-    let response;
+    setLoading(true);
+    try {
+      let response;
 
-    if (file) {
-      const formData = new FormData();
-      formData.append("resume", file);
-      formData.append("location", location || "Remote");
-      formData.append("salary", salary);
+      if (file) {
+        const formData = new FormData();
+        formData.append("resume", file);
+        formData.append("location", location);
+        formData.append("salary", salary);
 
-      if (locationType) formData.append("location_type", locationType);
-      if (employmentType) formData.append("employment_type", employmentType);
-      if (jobSector) formData.append("sector", jobSector);
-      if (usState) formData.append("us_state", usState);
+        if (locationType) formData.append("location_type", locationType);
+        if (employmentType) formData.append("employment_type", employmentType);
+        if (jobSector) formData.append("sector", jobSector);
+        if (usState) formData.append("us_state", usState);
 
-      response = await fetch("http://localhost:8000/upload-match", {
-        method: "POST",
-        body: formData,
-      });
-    } else {
-      const filterObj = {
-        location: location || "Remote",
-        salary: { "$gte": salary }
-      };
+        response = await fetch("http://localhost:8000/upload-match", {
+          method: "POST",
+          body: formData,
+        });
+      } else {
+        const filterObj = {
+          location: location || "Remote",
+          salary: { "$gte": salary }
+        };
 
-      if (locationType) filterObj.location_type = locationType;
-      if (employmentType) filterObj.employment_type = employmentType;
-      if (jobSector) filterObj.sector = jobSector;
-      if (usState) filterObj.us_state = usState;
+        if (locationType) filterObj.location_type = locationType;
+        if (employmentType) filterObj.employment_type = employmentType;
+        if (jobSector) filterObj.sector = jobSector;
+        if (usState) filterObj.us_state = usState;
 
-      response = await fetch("http://localhost:8000/match", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query,
-          top_k: 50,
-          filter: filterObj
-        }),
-      });
+        response = await fetch("http://localhost:8000/match", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query,
+            top_k: 100,
+            filter: filterObj
+          }),
+        });
+      }
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Use real data from backend instead of generating fake data
+      setJobs(data);
+      setPage(1);
+    } catch (err) {
+      console.error("Match error:", err);
+      alert("Failed to fetch matches. Please make sure the backend is running on localhost:8000");
+    } finally {
+      setLoading(false);
     }
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const enrichedJobs = data.map(job => ({
-      ...job,
-      company: getCompanyFromTitle(job.title),
-      type: getJobType(job.location),
-      tags: getTagsFromTitle(job.title)
-    }));
-
-    setJobs(enrichedJobs);
-    setPage(1);
-  } catch (err) {
-    console.error("Match error:", err);
-    alert("Failed to fetch matches. Please make sure the backend is running on localhost:8000");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  // Helper functions to enrich job data for better UI
-  const getCompanyFromTitle = (title) => {
-    const companies = ["TechCorp Inc.", "StartupXYZ", "Design Studios", "InnovateLab", "DataFlow Systems", "CloudTech Solutions", "AI Ventures", "NextGen Software"];
-    return companies[Math.floor(Math.random() * companies.length)];
   };
 
-  const getJobType = (location) => {
-    if (location.toLowerCase().includes("remote")) return "Remote";
-    return Math.random() > 0.5 ? "Full-time" : "Hybrid";
-  };
-
+  // Helper function to get tags from title (keep this for UI enhancement)
   const getTagsFromTitle = (title) => {
     const allTags = {
       "Software Engineer": ["React", "Node.js", "JavaScript", "Python", "AWS"],
@@ -136,10 +120,10 @@ export default function App() {
       "UX Designer": ["Figma", "Design Systems", "User Research", "Prototyping", "Wireframing"],
       "DevOps Engineer": ["Docker", "Kubernetes", "AWS", "CI/CD", "Infrastructure"]
     };
-    
+
     for (const [role, tags] of Object.entries(allTags)) {
       if (title.toLowerCase().includes(role.toLowerCase())) {
-        return tags.slice(0, 3); // Return first 3 tags
+        return tags.slice(0, 3);
       }
     }
     return ["Technology", "Innovation", "Growth"];
@@ -369,6 +353,14 @@ export default function App() {
       padding: '0.25rem 0.75rem',
       backgroundColor: '#d1fae5',
       color: '#065f46',
+      borderRadius: '9999px',
+      fontSize: '0.75rem',
+      fontWeight: '500'
+    },
+    locationTypeBadge: {
+      padding: '0.25rem 0.75rem',
+      backgroundColor: '#fef3c7',
+      color: '#92400e',
       borderRadius: '9999px',
       fontSize: '0.75rem',
       fontWeight: '500'
@@ -770,9 +762,17 @@ export default function App() {
                           <span>💰</span>
                           ${job.salary.toLocaleString()}
                         </span>
-                        <span style={styles.badge}>
-                          {job.type}
-                        </span>
+                        {job.us_state && (
+                          <span style={styles.badge}>
+                            {job.us_state}
+                          </span>
+                        )}
+                        {job.location_type && (
+                          <span style={styles.locationTypeBadge}>
+                            {job.location_type}
+                          </span>
+                        )}
+
                       </div>
                       {job.tags && (
                         <div style={styles.tags}>

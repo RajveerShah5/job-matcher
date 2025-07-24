@@ -32,12 +32,13 @@ while pc.describe_index(index_name).status['ready'] is not True:
     sleep(1)
 
 index = pc.Index(index_name)
-
+stats = index.describe_index_stats()
+existing_count = stats.get("total_vector_count", 0)
 # Initialize OpenAI client
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # === FAKE JOB DATA GENERATION ===
-def generate_fake_jobs(n=10000):
+def generate_fake_jobs(n=10000, id_offset=0):
     import random
 
     titles = [
@@ -47,7 +48,7 @@ def generate_fake_jobs(n=10000):
         "HR Specialist", "Technical Writer", "Support Engineer", "Recruiter", "Business Analyst"
     ]
 
-    levels = ["Intern", "Junior", "Mid", "Senior", "Lead", "Principal", "Director", "VP"]
+    levels = ["Junior", "Mid", "Senior", "Lead", "Principal", "Director", "VP"]
 
     us_states = [
         "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
@@ -61,9 +62,7 @@ def generate_fake_jobs(n=10000):
 
     location_types = ["Remote", "In-person", "Hybrid"]
 
-    employment_types = [
-    "Full-time", "Part-time", "Internship"
-    ]
+    employment_types = ["Full-time", "Part-time"]
 
     salaries = list(range(30000, 200001, 5000))  # $30k to $200k in $5k increments
 
@@ -76,7 +75,7 @@ def generate_fake_jobs(n=10000):
         location_type = random.choice(location_types)
         employment_type = random.choice(employment_types)
         salary = random.choice(salaries)
-        location = state if location_type != "Remote" else "Remote"
+        location = state
 
         description = (
             f"{full_title} opening in {location}. This is a {location_type} {employment_type} role. "
@@ -84,7 +83,7 @@ def generate_fake_jobs(n=10000):
         )
 
         jobs.append({
-            "id": f"job-{i}",
+            "id": f"job-{i + id_offset}",
             "text": description,
             "metadata": {
                 "title": full_title,
@@ -102,10 +101,6 @@ def generate_fake_jobs(n=10000):
 
 # === EMBEDDING AND UPSERT ===
 def embed_jobs(jobs, batch_size=100):
-    # 🚨 Clear existing data before uploading
-    print("Clearing existing index data...")
-    index.delete(delete_all=True)
-    print("Old job data cleared.\n")
 
     for i in range(0, len(jobs), batch_size):
         batch = jobs[i:i + batch_size]
@@ -131,7 +126,7 @@ def embed_jobs(jobs, batch_size=100):
 
 if __name__ == "__main__":
     print("Generating jobs...")
-    jobs = generate_fake_jobs(100)
+    jobs = generate_fake_jobs(900, id_offset=existing_count)
     print(f"Number of jobs generated: {len(jobs)}")
     print("Embedding and uploading...")
     embed_jobs(jobs)

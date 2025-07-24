@@ -11,6 +11,8 @@ export default function App() {
   const [jobs, setJobs] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [usState, setUsState] = useState("");
+
   const usStates = [
     "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", 
     "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", 
@@ -49,74 +51,71 @@ export default function App() {
   const resultsPerPage = 5;
 
   const fetchMatches = async () => {
-    setLoading(true);
-    try {
-      let response;
-      
-      if (file) {
-        // Use file upload endpoint
-        const formData = new FormData();
-        formData.append("resume", file);
-        formData.append("location", location || "Remote");
-        formData.append("salary", salary);
-        
-        // Add new filter parameters
-        if (locationType) formData.append("location_type", locationType);
-        if (employmentType) formData.append("employment_type", employmentType);
-        if (jobSector) formData.append("sector", jobSector);
+  setLoading(true);
+  try {
+    let response;
 
-        response = await fetch("http://localhost:8000/upload-match", {
-          method: "POST",
-          body: formData,
-        });
-      } else {
-        // Use text query endpoint with enhanced filters
-        const filterObj = {
-          location: location || "Remote",
-          salary: { "$gte": salary }
-        };
-        
-        // Add optional filters
-        if (locationType) filterObj.location_type = locationType;
-        if (employmentType) filterObj.employment_type = employmentType;
-        if (jobSector) filterObj.sector = jobSector;
+    if (file) {
+      const formData = new FormData();
+      formData.append("resume", file);
+      formData.append("location", location || "Remote");
+      formData.append("salary", salary);
 
-        response = await fetch("http://localhost:8000/match", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            query,
-            top_k: 50,
-            filter: filterObj
-          }),
-        });
-      }
+      if (locationType) formData.append("location_type", locationType);
+      if (employmentType) formData.append("employment_type", employmentType);
+      if (jobSector) formData.append("sector", jobSector);
+      if (usState) formData.append("us_state", usState);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      response = await fetch("http://localhost:8000/upload-match", {
+        method: "POST",
+        body: formData,
+      });
+    } else {
+      const filterObj = {
+        location: location || "Remote",
+        salary: { "$gte": salary }
+      };
 
-      const data = await response.json();
-      
-      // Transform the backend data to include additional UI properties
-      const enrichedJobs = data.map(job => ({
-        ...job,
-        company: getCompanyFromTitle(job.title),
-        type: getJobType(job.location),
-        tags: getTagsFromTitle(job.title)
-      }));
-      
-      setJobs(enrichedJobs);
-      setPage(1);
-    } catch (err) {
-      console.error("Match error:", err);
-      alert("Failed to fetch matches. Please make sure the backend is running on localhost:8000");
-    } finally {
-      setLoading(false);
+      if (locationType) filterObj.location_type = locationType;
+      if (employmentType) filterObj.employment_type = employmentType;
+      if (jobSector) filterObj.sector = jobSector;
+      if (usState) filterObj.us_state = usState;
+
+      response = await fetch("http://localhost:8000/match", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query,
+          top_k: 50,
+          filter: filterObj
+        }),
+      });
     }
-  };
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const enrichedJobs = data.map(job => ({
+      ...job,
+      company: getCompanyFromTitle(job.title),
+      type: getJobType(job.location),
+      tags: getTagsFromTitle(job.title)
+    }));
+
+    setJobs(enrichedJobs);
+    setPage(1);
+  } catch (err) {
+    console.error("Match error:", err);
+    alert("Failed to fetch matches. Please make sure the backend is running on localhost:8000");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Helper functions to enrich job data for better UI
   const getCompanyFromTitle = (title) => {

@@ -495,52 +495,9 @@ export default function App() {
       <div style={styles.main}>
         {/* Search Form */}
         <div style={styles.formCard}>
-          {/* Resume Input */}
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Tell us about yourself</label>
-            <textarea
-              rows="4"
-              style={styles.textarea}
-              className="focus-input"
-              placeholder="Paste your resume, describe your experience, skills, and career goals..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              disabled={file !== null}
-            />
-            {file && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                backgroundColor: '#ecfdf5',
-                border: '1px solid #bbf7d0',
-                borderRadius: '0.5rem',
-                padding: '0.75rem',
-                marginTop: '0.75rem'
-              }}>
-                <span style={{ fontSize: '0.875rem', color: '#059669' }}>
-                  ✓ Using uploaded file: {file.name}
-                </span>
-                <button
-                  onClick={() => setFile(null)}
-                  style={{
-                    color: '#059669',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Remove
-                </button>
-              </div>
-            )}
-          </div>
-
           {/* File Upload */}
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Or upload your resume</label>
+            <label style={styles.label}>Upload your resume</label>
             <div>
               <input
                 type="file"
@@ -671,7 +628,7 @@ export default function App() {
           {/* Search Button */}
           <button
             onClick={fetchMatches}
-            disabled={loading || (!query.trim() && !file)}
+            disabled={loading || !file}
             style={{
               ...styles.button,
               ...(loading || (!query.trim() && !file) ? styles.buttonDisabled : {})
@@ -697,7 +654,7 @@ export default function App() {
               textAlign: 'center',
               marginTop: '0.75rem'
             }}>
-              Please enter your experience or upload a resume to get started
+              Please upload your resume to get started
             </p>
           )}
         </div>

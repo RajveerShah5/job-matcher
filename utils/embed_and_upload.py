@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from pinecone import Pinecone, ServerlessSpec
 from openai import OpenAI
 
+
 # Load environment variables
 load_dotenv()
 

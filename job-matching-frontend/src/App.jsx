@@ -125,13 +125,14 @@ export default function App() {
       <header style={styles.header}>
         <div style={styles.headerContent}>
           <div style={styles.logoContainer}>
-            <span style={{ fontSize: "2rem", color: "white", fontWeight: "bold" }}>💼</span>
+            <span style={styles.logoText}>JobMatcher AI</span>
+            <span style={styles.logoIcon}>💼</span>
           </div>
           <h1 style={styles.title}>
             Find your perfect career match with AI-powered recommendations
           </h1>
           <p style={styles.subtitle}>
-            Paste your resume OR upload a file and set your job preferences to discover top opportunities!
+            Upload your resume and set your job preferences to discover top opportunities!
           </p>
         </div>
       </header>
@@ -159,7 +160,7 @@ export default function App() {
 
           {/* US State */}
           <div style={styles.inputGroup}>
-            <label style={styles.label}>US State</label>
+            <label style={styles.labelWithIcon}><span style={styles.icon}>📍</span>US State</label>
             <select
               style={styles.select}
               value={usState}
@@ -174,7 +175,7 @@ export default function App() {
 
           {/* Location Type */}
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Location Type</label>
+            <label style={styles.labelWithIcon}><span style={styles.icon}>🗺️</span> Location Type</label>
             <select
               style={styles.select}
               value={locationType}
@@ -189,7 +190,7 @@ export default function App() {
 
           {/* Employment Type */}
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Employment Type</label>
+            <label style={styles.labelWithIcon}><span style={styles.icon}>💼</span> Employment Type</label>
             <select
               style={styles.select}
               value={employmentType}
@@ -204,7 +205,7 @@ export default function App() {
 
           {/* Job Title */}
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Job Title</label>
+            <label style={styles.labelWithIcon}><span style={styles.icon}>👑</span> Job Title</label>
             <select
               style={styles.select}
               value={jobTitle}
@@ -219,7 +220,7 @@ export default function App() {
 
           {/* Minimum Salary */}
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Minimum Salary (${salary.toLocaleString()})</label>
+            <label style={styles.labelWithIcon}><span style={styles.icon}>💰</span> Minimum Salary (${salary.toLocaleString()})</label>
             <input
               type="range"
               min="30000"
@@ -342,16 +343,27 @@ const styles = {
   },
   logoContainer: {
     display: 'inline-flex',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '4rem',
-    height: '4rem',
+    gap: '0.5rem',
     background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
     borderRadius: '1rem',
+    padding: '0.5rem 1rem',
     marginBottom: '1rem'
   },
+  logoText: {
+    color: 'white',
+    fontSize: '2.5rem',
+    fontWeight: '600'
+  },
+  logoIcon: {
+    fontSize: '2.5rem',
+    color: 'white',
+    fontWeight: 'bold'
+  },
   title: {
-    fontSize: '2.25rem',
+    fontSize: '1.50rem',
     fontWeight: 'bold',
     background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
     WebkitBackgroundClip: 'text',
@@ -388,6 +400,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
+    boxSizing: 'border-box', 
     border: '2px dashed #d1d5db',
     borderRadius: '0.75rem',
     padding: '1.5rem',
@@ -397,7 +410,7 @@ const styles = {
     backgroundColor: '#fafafa'
   },
   uploadIcon: {
-    fontSize: '2rem',
+    fontSize: '5rem',
     marginBottom: '0.5rem',
     display: 'block'
   },
@@ -448,7 +461,7 @@ const styles = {
     marginBottom: '1rem'
   },
   jobTitle: {
-    fontSize: '1.25rem',
+    fontSize: '2rem',
     fontWeight: 'bold',
     color: '#1f2937',
     marginBottom: '0.25rem'

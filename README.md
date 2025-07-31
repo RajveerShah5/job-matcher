@@ -44,27 +44,34 @@ JobMatcher AI enables users to:
 
 ---
 
-### 📦 Backend Setup
+### ⚙️ Backend and Frontend Setup 
 
 ```bash
-# Install dependencies
+# ========================
+# 📦 Backend Setup
+# ========================
+
+# Step 1: Install backend dependencies
 pip install fastapi uvicorn openai numpy pandas pinecone-client python-dotenv
 
-# Set environment variables (or create a .env file)
+# Step 2: Set environment variables (or create a .env file)
 export OPENAI_API_KEY=your_openai_key
 export PINECONE_API_KEY=your_pinecone_key
 export PINECONE_INDEX_NAME=your_index_name
 
-# Run FastAPI server
+# Step 3: Run FastAPI backend
 uvicorn api.matching:app --reload
 
 
-### 📦 Frontend Setup
+# ========================
+# 🌐 Frontend Setup
+# ========================
 
-```bash
-# Navigate to frontend directory
+# Step 1: Navigate to the frontend directory
 cd job-matching-frontend
 
-# Install dependencies and start app
+# Step 2: Install frontend dependencies
 npm install
+
+# Step 3: Start the frontend app
 npm start

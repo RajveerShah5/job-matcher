@@ -10,11 +10,23 @@ from typing import List, Optional
 from pinecone import Pinecone
 from openai import OpenAI
 
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
-index = pc.Index(os.getenv("PINECONE_INDEX_NAME"))
+
+# Load OpenAI key
+openai_api_key = os.getenv("OPENAI_API_KEY")
+if not openai_api_key:
+    raise RuntimeError("Missing OPENAI_API_KEY in environment")
+openai_client = OpenAI(api_key=openai_api_key)
+
+# Load Pinecone API credentials
+pinecone_api_key = os.getenv("PINECONE_API_KEY")
+pinecone_index_name = os.getenv("PINECONE_INDEX_NAME")
+if not pinecone_api_key or not pinecone_index_name:
+    raise RuntimeError("Missing Pinecone configuration in environment")
+
+pc = Pinecone(api_key=pinecone_api_key)
+index = pc.Index(pinecone_index_name)
 
 app = FastAPI()
 app.add_middleware(

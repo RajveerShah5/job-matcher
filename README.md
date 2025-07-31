@@ -1,23 +1,37 @@
-# Job Matching Backend (Pinecone + OpenAI)
+# 💼 JobMatcher AI
 
-## Setup Instructions
+AI-powered job matching platform that helps users discover career opportunities aligned with their skills, preferences, and resume — all powered by semantic search and vector embeddings.
 
-1. Create and activate virtual environment:
+---
 
-    python3 -m venv venv
-    source venv/bin/activate  # On Windows: venv\Scripts\activate
+## 🚀 Overview
 
-2. Install dependencies:
+JobMatcher AI enables users to:
 
-    pip install -r requirements.txt
+- 📄 Upload their **resume (PDF/DOCX)**.
+- 🎯 Set preferences like **location**, **employment type**, **job title**, and **salary**.
+- 🤖 Receive **ranked job recommendations** based on AI embeddings and semantic similarity.
+- 🧠 See **match scores**, smart **tag suggestions**, and job metadata.
+- 🧭 Navigate through results with **pagination** and intuitive filters.
 
-3. Rename `.env.example` to `.env` and add your API keys.
+---
 
-4. Run the embedding script:
+## 🧠 Tech Stack
 
-    python utils/embed_and_upload.py
+**Frontend (React):**
 
-5. Start the API:
+- React hooks and fetch API
+- Inline custom styling
+- Resume upload, dynamic filters, pagination
 
-    uvicorn api.matching:app --reload
-# job-matcher
+**Backend (FastAPI - Python):**
+
+- `embed_and_upload.py`: Resume processing + embedding
+- `matching.py`: Semantic search + filtering logic
+- Embedding via **OpenAI API**
+- Vector DB (e.g., **Pinecone**, **FAISS**) for nearest neighbor search
+
+---
+
+## 📁 Project Structure
+

@@ -57,3 +57,14 @@ export PINECONE_INDEX_NAME=your_index_name
 
 # Run FastAPI server
 uvicorn api.matching:app --reload
+
+
+### 📦 Frontend Setup
+
+```bash
+# Navigate to frontend directory
+cd job-matching-frontend
+
+# Install dependencies and start app
+npm install
+npm start
